@@ -493,23 +493,33 @@
         row.innerHTML = `<input type="text" placeholder="e.g. Welcome / Worship / Sermon" value="${name}"><input type="number" min="0" max="120" value="${mins}"><input type="number" min="0" max="59" value="${secs}"><button class="btn-remove" onclick="this.parentElement.remove()">✕</button>`;
         document.getElementById("segments-list").appendChild(row);
       }
-      addSegment("Welcome & Announcements", 5, 0);
-      addSegment("Worship", 20, 0);
-      addSegment("Offering", 5, 0);
-      addSegment("Sermon", 35, 0);
-      addSegment("Altar Call / Prayer", 10, 0);
-      addSegment("Closing", 5, 0);
+      const _saved = localStorage.getItem("serviceSegments");
+      if (_saved) {
+        JSON.parse(_saved).forEach((s) => addSegment(s.name, s.mins, s.secs));
+      } else {
+        addSegment("Welcome & Announcements", 5, 0);
+        addSegment("Worship", 20, 0);
+        addSegment("Offering", 5, 0);
+        addSegment("Sermon", 35, 0);
+        addSegment("Altar Call / Prayer", 10, 0);
+        addSegment("Closing", 5, 0);
+      }
 
       function startService() {
         segments = [];
+        const rowData = [];
         document.querySelectorAll(".segment-row").forEach((row) => {
           const i = row.querySelectorAll("input");
-          const total =
-            (parseInt(i[1].value) || 0) * 60 + (parseInt(i[2].value) || 0);
-          if (total > 0)
+          const mins = parseInt(i[1].value) || 0;
+          const secs = parseInt(i[2].value) || 0;
+          const total = mins * 60 + secs;
+          if (total > 0) {
             segments.push({ name: i[0].value.trim() || "Untitled", total });
+            rowData.push({ name: i[0].value.trim(), mins, secs });
+          }
         });
         if (!segments.length) return alert("Please add at least one segment.");
+        localStorage.setItem("serviceSegments", JSON.stringify(rowData));
         currentIndex = 0;
         document.getElementById("setup-screen").style.display = "none";
         const ts = document.getElementById("timer-screen");
