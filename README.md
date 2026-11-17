@@ -1,62 +1,57 @@
 # ✦ Service Timer
 
-Keep every church service on time, in every room.
+A lightweight, browser-based service flow timer built for church operators who need to keep a live service on schedule — without the overhead of complex presentation software.
 
-Service Timer gives the operator a control console and gives every screen (the projector, a stage monitor, an overflow TV, a phone) the same live countdown. The screens stay in sync to the second, across rooms and across sites.
+## Problem
 
-## What it does
+Managing time across a live church service is a manual, error-prone process. Operators typically rely on wall clocks, personal phones, or improvised solutions that don't give speakers a clear, real-time signal of where they stand on time — especially when segments run over.
 
-- **Your own link.** Sign up, name your organisation and get `yourdomain/your-church`. Each location has its own display link (`/your-church/main`, `/your-church/overflow`). Screens need no login.
-- **Multiple locations.** Each location runs its own live session, and several can run at the same time.
-- **Templates.** Save an order of service once and reuse it every week.
-- **Recurring events.** Link a template to a location, the days and a start time. On the day, it appears under *Today* ready to start in one click.
-- **Service log.** Every segment records planned against actual time. The *Patterns* view shows which segments regularly run over.
-- **Speaker cues.** The countdown turns amber at 2 minutes and orange at 1 minute. When time is up the screen flashes red and counts up the overtime. You can also send a message to the stage.
-- **Operator controls.** `Space` pauses or resumes, `→` moves to the next segment, `←` goes back and `+`/`−` adds or removes a minute. You can jump to any segment, restart one, or adjust today's segments without changing the template.
-- **Team.** Share a 6-character join code so your media team can sign up as operators.
+## Solution
 
-## Why the timing is reliable (v1 vs v2)
+Service Timer is a zero-install, single-file web app that gives operators full control over the order of service from a laptop, while projecting a clean, distraction-free countdown to a second screen for speakers to reference in real time.
 
-v1 drove the projector by pushing a formatted string from the operator window once a second. Browsers slow down timers in background windows, so the projector froze or drifted whenever the operator clicked away. Also, every click on "Open Presentation Screen" added another update loop.
+## Live Demo
 
-In v2 no screen is told the time. Each one gets the **state** of the session (which segment, when it started, how long it was paused) and works out the countdown itself, 10 times a second, against the **server's clock**. The offset to the server is measured with several round trips and checked again every 5 minutes. All timer actions run on the server and use the server's timestamp. As a result:
+Hosted via GitHub Pages — no download required:
+👉 `https://yourusername.github.io/service-timer`
 
-- A screen that sleeps, loses Wi-Fi or sits in a background tab is exactly right as soon as it wakes.
-- Two screens in different buildings show the same second.
-- If the realtime connection drops, screens keep counting from the last state they had. They reconnect on their own and also check for changes every 15 seconds.
+*(Replace `yourusername` with your GitHub username)*
 
-## Stack
+## Core User Flows
 
-- React + Vite (single-page app), hosted on Vercel
-- Supabase: Postgres with row-level security, Auth, Realtime
-- All timer actions go through the `timer_action` Postgres function, so the server's clock is the single source of truth
+**Before service** — The operator pre-loads all service segments with names and durations. No account, no sync, no setup beyond opening a file.
 
-### Data model
+**During service** — A large countdown runs per segment. The operator advances manually using the `→` arrow key, staying in control of the pace without being tied to a mouse.
 
-| Table | Purpose |
-|---|---|
-| `organisations` | Name, URL slug, time zone, join code |
-| `org_members` | User ↔ organisation, role (`owner` / `admin` / `operator`) |
-| `locations` | Rooms or sites, each with its own display URL |
-| `templates` | Reusable orders of service (`segments` jsonb) |
-| `events` | Recurring events: location + template + days + time |
-| `sessions` | A live run: a snapshot of the segments plus timer state |
-| `session_log` | One row per segment run: planned against actual |
+**On overtime** — When a segment exceeds its allotted time, the display flips to an elapsed counter and the screen flashes red — giving speakers an unambiguous visual cue to wrap up, without the operator needing to intervene.
 
-## Run locally
+**On the projector** — A dedicated presentation window opens in a separate browser window, designed to run fullscreen on a projector or secondary display. It stays in sync with the operator's control screen in real time.
 
-```bash
-npm install
-cp .env.example .env   # Supabase URL + publishable key
-npm run dev
-```
+## Key Design Decisions
 
-## Deploy
+- **Manual advancement, not auto-advance** — The operator always decides when to move to the next segment. This is intentional: only a human in the room knows when a speaker has actually finished, regardless of what the clock says.
+- **Single HTML file** — No frameworks, no build steps, no server. The entire app ships as one file that works offline.
+- **Keyboard-first controls** — `Space` to pause/resume, `→` to advance. Designed to be operated without looking at the screen.
 
-The repo is linked to Vercel, so every push to `main` deploys. `vercel.json` sends all routes to the single-page app.
+## Getting Started
 
-In Supabase → Authentication → URL Configuration, set **Site URL** to the production domain and add `https://<domain>/**` to the redirect URLs, so the sign-up confirmation emails link back to the app.
+### Option A — Use it instantly (GitHub Pages)
+Just open the live link above in any modern desktop browser. Nothing to install.
 
-## Licence
+### Option B — Run it locally
+1. Download `church-timer.html`
+2. Open it in any modern desktop browser
+3. Enter your service segments and durations
+4. Click **Begin Service**
+5. Click **⛶ Open Presentation Screen**, drag it to your projector, and press `F11` for fullscreen
+6. Use `→` to advance through segments as the service progresses
 
-[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/). Free for non-commercial use with attribution.
+## Requirements
+
+Any modern desktop browser. No internet connection required if running locally.
+
+## License
+
+This project is licensed under the [Creative Commons Attribution-NonCommercial 4.0 International License](https://creativecommons.org/licenses/by-nc/4.0/).
+
+You are free to use, share, and adapt this project for non-commercial purposes, as long as you give credit to the original creator and link back to this repository. It may not be sold or used for commercial gain.
